@@ -3,7 +3,6 @@ const Transaction = require("../models/Transaction");
 
 const router = express.Router();
 
-// Helper function to get month range
 const getMonthRange = (month) => {
   const year = new Date().getFullYear();
   const start = new Date(year, month - 1, 1);
@@ -11,20 +10,13 @@ const getMonthRange = (month) => {
   return { start, end };
 };
 
-// List all transactions with search and pagination
-
 router.get("/transactions", async (req, res) => {
   const { month, search, page = 1, perPage = 10 } = req.query;
 
   try {
-    // Construct the query to filter transactions by month irrespective of year
     const query = {
       $expr: {
-        $and: [
-          { $eq: [{ $month: "$dateOfSale" }, parseInt(month)] }, // Match month
-          // Optionally, match day as well if needed:
-          // { $eq: [{ $dayOfMonth: '$dateOfSale' }, dayValue] }
-        ],
+        $and: [{ $eq: [{ $month: "$dateOfSale" }, parseInt(month)] }],
       },
     };
 
@@ -32,11 +24,10 @@ router.get("/transactions", async (req, res) => {
       query.$or = [
         { title: { $regex: search, $options: "i" } },
         { description: { $regex: search, $options: "i" } },
-        // Optionally, add additional fields for search here
       ];
     }
 
-    console.log("Query:", query); // Log the constructed query
+    console.log("Query:", query);
 
     const transactions = await Transaction.find(query)
       .skip((page - 1) * perPage)
@@ -48,7 +39,6 @@ router.get("/transactions", async (req, res) => {
     res.status(500).send("Error fetching transactions");
   }
 });
-// Statistics API
 
 router.get("/statistics", async (req, res) => {
   const month = parseInt(req.query.month, 10);
@@ -57,12 +47,12 @@ router.get("/statistics", async (req, res) => {
     const pipeline = [
       {
         $addFields: {
-          saleMonth: { $month: "$dateOfSale" }, // Extract month from dateOfSale
+          saleMonth: { $month: "$dateOfSale" },
         },
       },
       {
         $match: {
-          saleMonth: month, // Filter by the specified month
+          saleMonth: month,
         },
       },
       {
@@ -87,20 +77,18 @@ router.get("/statistics", async (req, res) => {
       },
     ];
 
-    console.log("Aggregation Pipeline:", JSON.stringify(pipeline)); // Log the aggregation pipeline
+    console.log("Aggregation Pipeline:", JSON.stringify(pipeline));
 
     const result = await Transaction.aggregate(pipeline);
 
-    console.log("Aggregation Result:", result); // Log the aggregation result
+    console.log("Aggregation Result:", result);
 
     if (result.length === 0) {
-      // Handle case where no documents match the criteria
       return res
         .status(404)
         .json({ message: "No transactions found for the specified month" });
     }
 
-    // Extract the result from the aggregation response
     const { totalSaleAmount, totalSoldItems, totalNotSoldItems } = result[0];
 
     res
@@ -125,12 +113,12 @@ router.get("/statistics", async (req, res) => {
       },
       {
         $addFields: {
-          saleMonth: { $month: "$dateOfSale" }, // Extract month from dateOfSale
+          saleMonth: { $month: "$dateOfSale" },
         },
       },
       {
         $match: {
-          saleMonth: month, // Filter by the specified month
+          saleMonth: month,
         },
       },
       {
@@ -155,20 +143,18 @@ router.get("/statistics", async (req, res) => {
       },
     ];
 
-    console.log("Aggregation Pipeline:", JSON.stringify(pipeline)); // Log the aggregation pipeline
+    console.log("Aggregation Pipeline:", JSON.stringify(pipeline));
 
     const result = await Transaction.aggregate(pipeline);
 
-    console.log("Aggregation Result:", result); // Log the aggregation result
+    console.log("Aggregation Result:", result);
 
     if (result.length === 0) {
-      // Handle case where no documents match the criteria
       return res
         .status(404)
         .json({ message: "No transactions found for the specified month" });
     }
 
-    // Extract the result from the aggregation response
     const { totalSaleAmount, totalSoldItems, totalNotSoldItems } = result[0];
 
     res
@@ -187,12 +173,12 @@ router.get("/bar-chart", async (req, res) => {
     const pipeline = [
       {
         $addFields: {
-          saleMonth: { $month: "$dateOfSale" }, // Extract month from dateOfSale
+          saleMonth: { $month: "$dateOfSale" },
         },
       },
       {
         $match: {
-          saleMonth: month, // Filter by the specified month
+          saleMonth: month,
         },
       },
       {
@@ -241,11 +227,11 @@ router.get("/bar-chart", async (req, res) => {
       },
     ];
 
-    console.log("Aggregation Pipeline:", JSON.stringify(pipeline)); // Log the aggregation pipeline
+    console.log("Aggregation Pipeline:", JSON.stringify(pipeline));
 
     const result = await Transaction.aggregate(pipeline);
 
-    console.log("Aggregation Result:", result); // Log the aggregation result
+    console.log("Aggregation Result:", result);
 
     res.status(200).json(result);
   } catch (error) {
@@ -253,7 +239,7 @@ router.get("/bar-chart", async (req, res) => {
     res.status(500).send("Error fetching bar chart data");
   }
 });
-// Pie chart API
+
 router.get("/pie-chart", async (req, res) => {
   const month = parseInt(req.query.month, 10);
   const { start, end } = getMonthRange(month);
@@ -278,7 +264,6 @@ router.get("/pie-chart", async (req, res) => {
   }
 });
 
-// Combined API
 router.get("/combined", async (req, res) => {
   const { month } = req.query;
   try {

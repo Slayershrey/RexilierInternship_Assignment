@@ -5,7 +5,7 @@ import Statistics from "./Statistics.js";
 import BarChart from "./BarChart.js";
 
 const Dashboard = () => {
-  const [month, setMonth] = useState(3); // Default to March
+  const [month, setMonth] = useState(3);
   const [search, setSearch] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [statistics, setStatistics] = useState({});
